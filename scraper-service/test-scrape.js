@@ -4,7 +4,7 @@ console.log('🧪 Testing Real Scrape...\n');
 
 // Replace with your actual Google Business URL
 const testData = {
-  placeUrl: 'https://www.google.com/maps/place/Googleplex/@37.4220656,-122.0840897,17z/data=!3m1!4b1!4m6!3m5!1s0x808fba02425dad8f:0x6c296c66619367e0!8m2!3d37.4220656!4d-122.0840897!16zL20vMDM3cjFf',
+  placeUrl: 'https://www.google.com/maps/place/West+Layton+Manor/@54.4840731,-1.7844206,17z/data=!3m1!4b1!4m6!3m5!1s0x487c216b3961cdb3:0xa7573524c60b56ee!8m2!3d54.48407!4d-1.7818457!16s%2Fg%2F11b747rbjz?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D',
   maxReviews: 5
 };
 

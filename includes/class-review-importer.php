@@ -157,6 +157,15 @@ class SRS_Review_Importer {
                                 </p>
                             </td>
                         </tr>
+                        <tr>
+                            <th scope="row"></th>
+                            <td>
+                                <button type="button" class="button button-secondary srs-test-connection" data-platform="scraper">
+                                    <?php _e('Test Service Connection', 'social-review-slider'); ?>
+                                </button>
+                                <span class="description" style="margin-left: 10px;"><?php _e('Click to verify the scraper service is running and accessible.', 'social-review-slider'); ?></span>
+                            </td>
+                        </tr>
                     </table>
                 </div>
                 
@@ -567,82 +576,47 @@ class SRS_Review_Importer {
             wp_send_json_error('Insufficient permissions');
         }
         
-        $platform = sanitize_text_field($_POST['platform']);
+        $service_url = get_option('srs_scraper_service_url', 'http://localhost:3000');
+        $api_key = get_option('srs_scraper_api_key');
         
-        switch ($platform) {
-            case 'google':
-                $result = $this->test_google_connection();
-                break;
-            case 'tripadvisor':
-                $result = $this->test_tripadvisor_connection();
-                break;
-            default:
-                $result = array('success' => false, 'message' => 'Invalid platform');
+        // 1. Test Health Endpoint (No Auth)
+        $health_response = wp_remote_get($service_url . '/health');
+        
+        if (is_wp_error($health_response)) {
+            wp_send_json_error('Service Unreachable: ' . $health_response->get_error_message());
         }
         
-        if ($result['success']) {
-            wp_send_json_success($result['message']);
-        } else {
-            wp_send_json_error($result['message']);
-        }
-    }
-    
-    private function test_google_connection() {
-        $api_key = get_option('srs_google_api_key');
-        $place_id = get_option('srs_google_place_id');
-        
-        if (empty($api_key) || empty($place_id)) {
-            return array('success' => false, 'message' => 'Please enter both API Key and Place ID');
+        $code = wp_remote_retrieve_response_code($health_response);
+        if ($code !== 200) {
+            wp_send_json_error('Service Error: HTTP ' . $code);
         }
         
-        $url = add_query_arg(array(
-            'place_id' => $place_id,
-            'fields' => 'name,rating',
-            'key' => $api_key,
-        ), 'https://maps.googleapis.com/maps/api/place/details/json');
-        
-        $response = wp_remote_get($url);
-        
-        if (is_wp_error($response)) {
-            return array('success' => false, 'message' => $response->get_error_message());
+        $health_body = json_decode(wp_remote_retrieve_body($health_response), true);
+        if (!$health_body || $health_body['status'] !== 'ok') {
+            wp_send_json_error('Service Malfunction: Invalid health check response');
         }
         
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        
-        if ($body['status'] === 'OK') {
-            return array('success' => true, 'message' => 'Connection successful! Found: ' . $body['result']['name']);
-        } else {
-            return array('success' => false, 'message' => 'Error: ' . $body['status']);
-        }
-    }
-    
-    private function test_tripadvisor_connection() {
-        $api_key = get_option('srs_tripadvisor_api_key');
-        $location_id = get_option('srs_tripadvisor_location_id');
-        
-        if (empty($api_key) || empty($location_id)) {
-            return array('success' => false, 'message' => 'Please enter both API Key and Location ID');
-        }
-        
-        $url = "https://api.tripadvisor.com/api/partner/2.0/location/{$location_id}";
-        
-        $response = wp_remote_get($url, array(
-            'headers' => array(
-                'X-TripAdvisor-API-Key' => $api_key,
-            ),
-        ));
-        
-        if (is_wp_error($response)) {
-            return array('success' => false, 'message' => $response->get_error_message());
+        // 2. Test Auth (if API key is provided)
+        if (!empty($api_key)) {
+            // We'll try to access a protected endpoint with a dummy request to check auth
+            // Using /api/scrape/google with missing params should return 400 if auth is good, 401 if bad
+            $auth_response = wp_remote_post($service_url . '/api/scrape/google', array(
+                'headers' => array(
+                    'Content-Type' => 'application/json',
+                    'X-API-Key' => $api_key,
+                ),
+                'body' => json_encode(array()), // Empty body to trigger validation error (400)
+                'timeout' => 5,
+            ));
+            
+            if (!is_wp_error($auth_response)) {
+                $auth_code = wp_remote_retrieve_response_code($auth_response);
+                if ($auth_code === 401) {
+                    wp_send_json_error('Service Reachable, but API Key is Invalid');
+                }
+            }
         }
         
-        $code = wp_remote_retrieve_response_code($response);
-        
-        if ($code === 200) {
-            $body = json_decode(wp_remote_retrieve_body($response), true);
-            return array('success' => true, 'message' => 'Connection successful! Found: ' . $body['name']);
-        } else {
-            return array('success' => false, 'message' => 'Error: HTTP ' . $code);
-        }
+        wp_send_json_success('Connection Successful! Service is running v' . $health_body['version']);
     }
 }
