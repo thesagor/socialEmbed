@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Review Slider - Demo</title>
+    
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .demo-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .demo-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .demo-header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+        
+        /* Include the plugin CSS */
+        :root {
+            --srs-primary-color: #FF5A5F;
+            --srs-secondary-color: #00A699;
+            --srs-text-dark: #484848;
+            --srs-text-light: #767676;
+            --srs-border-color: #EBEBEB;
+            --srs-star-color: #FFB400;
+            --srs-card-bg: #FFFFFF;
+            --srs-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+            --srs-shadow-hover: 0 4px 24px rgba(0, 0, 0, 0.16);
+            --srs-border-radius: 16px;
+            --srs-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .srs-review-slider-wrapper {
+            position: relative;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 1rem 0;
+        }
+        
+        .srs-review-card {
+            background: var(--srs-card-bg);
+            border-radius: var(--srs-border-radius);
+            padding: 2rem;
+            box-shadow: var(--srs-shadow);
+            transition: var(--srs-transition);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .srs-review-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--srs-primary-color), var(--srs-secondary-color));
+            opacity: 0;
+            transition: var(--srs-transition);
+        }
+        
+        .srs-review-card:hover {
+            box-shadow: var(--srs-shadow-hover);
+            transform: translateY(-4px);
+        }
+        
+        .srs-review-card:hover::before {
+            opacity: 1;
+        }
+        
+        .srs-review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+        
+        .srs-reviewer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+        
+        .srs-reviewer-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        
+        .srs-reviewer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .srs-reviewer-details {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .srs-reviewer-name {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--srs-text-dark);
+            line-height: 1.4;
+        }
+        
+        .srs-reviewer-location {
+            margin: 0.25rem 0 0;
+            font-size: 0.875rem;
+            color: var(--srs-text-light);
+            line-height: 1.4;
+        }
+        
+        .srs-platform-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: var(--srs-transition);
+        }
+        
+        .srs-platform-badge[data-platform="tripadvisor"] {
+            background: #34E0A1;
+            color: #FFFFFF;
+        }
+        
+        .srs-platform-badge[data-platform="google"] {
+            background: #4285F4;
+            color: #FFFFFF;
+        }
+        
+        .srs-platform-badge[data-platform="airbnb"] {
+            background: #FF5A5F;
+            color: #FFFFFF;
+        }
+        
+        .srs-platform-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .srs-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .srs-stars {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .srs-star {
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        
+        .srs-star-full {
+            color: var(--srs-star-color);
+        }
+        
+        .srs-star-half {
+            background: linear-gradient(90deg, var(--srs-star-color) 50%, #E0E0E0 50%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .srs-star-empty {
+            color: #E0E0E0;
+        }
+        
+        .srs-rating-number {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--srs-text-dark);
+        }
+        
+        .srs-review-content {
+            flex: 1;
+            margin-bottom: 1.5rem;
+            color: var(--srs-text-dark);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        .srs-review-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--srs-border-color);
+            gap: 1rem;
+        }
+        
+        .srs-review-date {
+            font-size: 0.875rem;
+            color: var(--srs-text-light);
+        }
+        
+        .srs-review-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--srs-primary-color);
+            text-decoration: none;
+            transition: var(--srs-transition);
+        }
+        
+        .srs-review-link:hover {
+            color: var(--srs-secondary-color);
+            gap: 0.75rem;
+        }
+        
+        .srs-review-slider-wrapper .swiper {
+            padding: 1rem 0 3rem;
+        }
+        
+        .srs-review-slider-wrapper .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background: white;
+            opacity: 0.5;
+            transition: var(--srs-transition);
+        }
+        
+        .srs-review-slider-wrapper .swiper-pagination-bullet-active {
+            background: white;
+            opacity: 1;
+            width: 24px;
+            border-radius: 5px;
+        }
+        
+        .srs-review-slider-wrapper .swiper-button-prev,
+        .srs-review-slider-wrapper .swiper-button-next {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: var(--srs-shadow);
+            transition: var(--srs-transition);
+        }
+        
+        .srs-review-slider-wrapper .swiper-button-prev:hover,
+        .srs-review-slider-wrapper .swiper-button-next:hover {
+            background: var(--srs-primary-color);
+            box-shadow: var(--srs-shadow-hover);
+        }
+        
+        .srs-review-slider-wrapper .swiper-button-prev::after,
+        .srs-review-slider-wrapper .swiper-button-next::after {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--srs-text-dark);
+            transition: var(--srs-transition);
+        }
+        
+        .srs-review-slider-wrapper .swiper-button-prev:hover::after,
+        .srs-review-slider-wrapper .swiper-button-next:hover::after {
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-header h1 {
+                font-size: 2rem;
+            }
+            
+            .srs-review-card {
+                padding: 1.5rem;
+            }
+            
+            .srs-review-header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🌟 Social Review Slider</h1>
+            <p>Beautiful reviews from TripAdvisor, Google & Airbnb</p>
+        </div>
+        
+        <div class="srs-review-slider-wrapper">
+            <div class="swiper mySwiper">
+                <div class="swiper-wrapper">
+                    <!-- Review 1 - Google -->
+                    <div class="swiper-slide">
+                        <div class="srs-review-card" data-platform="google">
+                            <div class="srs-review-header">
+                                <div class="srs-reviewer-info">
+                                    <div class="srs-reviewer-avatar">
+                                        JD
+                                    </div>
+                                    <div class="srs-reviewer-details">
+                                        <h3 class="srs-reviewer-name">John Doe</h3>
+                                        <p class="srs-reviewer-location">New York, USA</p>
+                                    </div>
+                                </div>
+                                <div class="srs-platform-badge" data-platform="google">
+                                    <span class="srs-platform-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        </svg>
+                                    </span>
+                                    <span class="srs-platform-name">Google</span>
+                                </div>
+                            </div>
+                            
+                            <div class="srs-rating">
+                                <div class="srs-stars">
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                </div>
+                                <span class="srs-rating-number">5.0</span>
+                            </div>
+                            
+                            <div class="srs-review-content">
+                                <p>Absolutely amazing experience! The service was top-notch and exceeded all my expectations. The attention to detail and customer care was outstanding. I would highly recommend this to anyone looking for quality service.</p>
+                            </div>
+                            
+                            <div class="srs-review-footer">
+                                <span class="srs-review-date">November 15, 2025</span>
+                                <a href="#" class="srs-review-link">
+                                    View Original
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                        <path d="M10.5 1.5L1.5 10.5M10.5 1.5H4.5M10.5 1.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Review 2 - TripAdvisor -->
+                    <div class="swiper-slide">
+                        <div class="srs-review-card" data-platform="tripadvisor">
+                            <div class="srs-review-header">
+                                <div class="srs-reviewer-info">
+                                    <div class="srs-reviewer-avatar">
+                                        SM
+                                    </div>
+                                    <div class="srs-reviewer-details">
+                                        <h3 class="srs-reviewer-name">Sarah Miller</h3>
+                                        <p class="srs-reviewer-location">London, UK</p>
+                                    </div>
+                                </div>
+                                <div class="srs-platform-badge" data-platform="tripadvisor">
+                                    <span class="srs-platform-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="8" cy="14" r="3"/>
+                                            <circle cx="16" cy="14" r="3"/>
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                                        </svg>
+                                    </span>
+                                    <span class="srs-platform-name">TripAdvisor</span>
+                                </div>
+                            </div>
+                            
+                            <div class="srs-rating">
+                                <div class="srs-stars">
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-half">★</span>
+                                </div>
+                                <span class="srs-rating-number">4.5</span>
+                            </div>
+                            
+                            <div class="srs-review-content">
+                                <p>Great location and wonderful staff! Everything was clean and well-maintained. The only minor issue was the wait time, but overall it was a fantastic experience that I would definitely repeat.</p>
+                            </div>
+                            
+                            <div class="srs-review-footer">
+                                <span class="srs-review-date">November 10, 2025</span>
+                                <a href="#" class="srs-review-link">
+                                    View Original
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                        <path d="M10.5 1.5L1.5 10.5M10.5 1.5H4.5M10.5 1.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Review 3 - Airbnb -->
+                    <div class="swiper-slide">
+                        <div class="srs-review-card" data-platform="airbnb">
+                            <div class="srs-review-header">
+                                <div class="srs-reviewer-info">
+                                    <div class="srs-reviewer-avatar">
+                                        MC
+                                    </div>
+                                    <div class="srs-reviewer-details">
+                                        <h3 class="srs-reviewer-name">Michael Chen</h3>
+                                        <p class="srs-reviewer-location">San Francisco, USA</p>
+                                    </div>
+                                </div>
+                                <div class="srs-platform-badge" data-platform="airbnb">
+                                    <span class="srs-platform-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 1c-1.4 0-2.5 1.1-2.5 2.5 0 .8.4 1.5 1 2L12 8l1.5-2.5c.6-.5 1-1.2 1-2C14.5 2.1 13.4 1 12 1zm0 22l-8-8h4v-4h8v4h4l-8 8z"/>
+                                        </svg>
+                                    </span>
+                                    <span class="srs-platform-name">Airbnb</span>
+                                </div>
+                            </div>
+                            
+                            <div class="srs-rating">
+                                <div class="srs-stars">
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                    <span class="srs-star srs-star-full">★</span>
+                                </div>
+                                <span class="srs-rating-number">5.0</span>
+                            </div>
+                            
+                            <div class="srs-review-content">
+                                <p>Perfect stay! The place was exactly as described, super clean, and in a great location. The host was very responsive and helpful. Would definitely book again and recommend to friends and family!</p>
+                            </div>
+                            
+                            <div class="srs-review-footer">
+                                <span class="srs-review-date">November 5, 2025</span>
+                                <a href="#" class="srs-review-link">
+                                    View Original
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                        <path d="M10.5 1.5L1.5 10.5M10.5 1.5H4.5M10.5 1.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
+    <script>
+        const swiper = new Swiper('.mySwiper', {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 1,
+                },
+                768: {
+                    slidesPerView: 2,
+                },
+                1024: {
+                    slidesPerView: 3,
+                },
+            },
+        });
+    </script>
+</body>
+</html>
