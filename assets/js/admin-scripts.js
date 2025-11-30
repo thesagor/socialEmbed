@@ -220,9 +220,3 @@
     });
     
 })(jQuery);
-
-// Global admin object
-var srsAdmin = {
-    manualImportNonce: '<?php echo wp_create_nonce("srs_manual_import"); ?>',
-    testConnectionNonce: '<?php echo wp_create_nonce("srs_test_connection"); ?>'
-};

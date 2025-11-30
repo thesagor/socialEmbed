@@ -139,9 +139,9 @@ class SRS_Review_Importer {
                                 <label for="srs_scraper_service_url"><?php _e('Scraper Service URL', 'social-review-slider'); ?></label>
                             </th>
                             <td>
-                                <input type="url" id="srs_scraper_service_url" name="srs_scraper_service_url" value="<?php echo esc_attr(get_option('srs_scraper_service_url', 'http://localhost:3000')); ?>" class="regular-text">
+                                <input type="url" id="srs_scraper_service_url" name="srs_scraper_service_url" value="<?php echo esc_attr(get_option('srs_scraper_service_url', 'http://127.0.0.1:3000')); ?>" class="regular-text">
                                 <p class="description">
-                                    <?php _e('URL of your AI scraper service (default: http://localhost:3000)', 'social-review-slider'); ?>
+                                    <?php _e('URL of your AI scraper service (default: http://127.0.0.1:3000)', 'social-review-slider'); ?>
                                 </p>
                             </td>
                         </tr>
@@ -282,7 +282,7 @@ class SRS_Review_Importer {
      * Import reviews from Google using AI Scraper Service
      */
     public function import_google_reviews() {
-        $service_url = get_option('srs_scraper_service_url', 'http://localhost:3000');
+        $service_url = get_option('srs_scraper_service_url', 'http://127.0.0.1:3000');
         $api_key = get_option('srs_scraper_api_key');
         $place_url = get_option('srs_google_place_url');
         
@@ -302,6 +302,8 @@ class SRS_Review_Importer {
                 'maxReviews' => $limit,
             )),
             'timeout' => 60,
+            'sslverify' => false,
+            'httpversion' => '1.1'
         ));
         
         if (is_wp_error($response)) {
@@ -338,7 +340,7 @@ class SRS_Review_Importer {
      * Import reviews from TripAdvisor using AI Scraper Service
      */
     public function import_tripadvisor_reviews() {
-        $service_url = get_option('srs_scraper_service_url', 'http://localhost:3000');
+        $service_url = get_option('srs_scraper_service_url', 'http://127.0.0.1:3000');
         $api_key = get_option('srs_scraper_api_key');
         $hotel_url = get_option('srs_tripadvisor_hotel_url');
         
@@ -358,6 +360,8 @@ class SRS_Review_Importer {
                 'maxReviews' => $limit,
             )),
             'timeout' => 60,
+            'sslverify' => false,
+            'httpversion' => '1.1'
         ));
         
         if (is_wp_error($response)) {
@@ -393,7 +397,7 @@ class SRS_Review_Importer {
      * Import reviews from Airbnb using AI Scraper Service
      */
     public function import_airbnb_reviews() {
-        $service_url = get_option('srs_scraper_service_url', 'http://localhost:3000');
+        $service_url = get_option('srs_scraper_service_url', 'http://127.0.0.1:3000');
         $api_key = get_option('srs_scraper_api_key');
         $listing_url = get_option('srs_airbnb_listing_url');
         
@@ -413,6 +417,8 @@ class SRS_Review_Importer {
                 'maxReviews' => $limit,
             )),
             'timeout' => 60,
+            'sslverify' => false,
+            'httpversion' => '1.1'
         ));
         
         if (is_wp_error($response)) {
@@ -576,14 +582,30 @@ class SRS_Review_Importer {
             wp_send_json_error('Insufficient permissions');
         }
         
-        $service_url = get_option('srs_scraper_service_url', 'http://localhost:3000');
+        $service_url = get_option('srs_scraper_service_url', 'http://127.0.0.1:3000');
         $api_key = get_option('srs_scraper_api_key');
         
         // 1. Test Health Endpoint (No Auth)
-        $health_response = wp_remote_get($service_url . '/health');
+        $health_response = wp_remote_get($service_url . '/health', array(
+            'timeout' => 15,
+            'sslverify' => false,
+            'httpversion' => '1.1',
+            'blocking' => true
+        ));
         
         if (is_wp_error($health_response)) {
-            wp_send_json_error('Service Unreachable: ' . $health_response->get_error_message());
+            $error_message = $health_response->get_error_message();
+            $error_code = $health_response->get_error_code();
+            
+            // Provide more helpful error messages
+            if (strpos($error_message, 'cURL error 7') !== false || strpos($error_message, 'Connection refused') !== false) {
+                wp_send_json_error('Service Not Running: Make sure the scraper service is started (npm start). Error: ' . $error_message);
+            } elseif (strpos($error_message, 'Could not resolve host') !== false) {
+                wp_send_json_error('DNS Error: Try using 127.0.0.1 instead of localhost. Error: ' . $error_message);
+            } else {
+                wp_send_json_error('Service Unreachable [' . $error_code . ']: ' . $error_message);
+            }
+            return;
         }
         
         $code = wp_remote_retrieve_response_code($health_response);

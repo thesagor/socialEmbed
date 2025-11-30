@@ -23,10 +23,11 @@ async function extractReviewsFromHTML(html, platform, maxReviews = 50) {
     ? html.substring(0, maxHtmlLength) + '...[truncated]'
     : html;
 
-  // 1. Try Google Gemini First (It's Free!)
+  // 1. Try Google Gemini (Free & Fast!)
   if (genAI) {
     try {
-      console.log('[AI] Using Google Gemini 2.0 Flash (Free Tier)...');
+      console.log('[AI] Using Google Gemini 2.0 Flash...');
+      // Use the model we saw in diagnostics
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       const prompt = `
@@ -65,42 +66,13 @@ async function extractReviewsFromHTML(html, platform, maxReviews = 50) {
       return validateReviews(reviews, platform, maxReviews);
 
     } catch (error) {
-      console.error('[Gemini] Extraction failed, falling back to OpenAI...', error.message);
-      // Fall through to OpenAI
+      console.error('[Gemini] Extraction failed:', error);
+      // Throw the error directly so we can see it in the response
+      throw new Error(`Gemini extraction failed: ${error.message}`);
     }
   }
 
-  // 2. Fallback to OpenAI
-  if (openai) {
-    try {
-      console.log('[AI] Using OpenAI GPT-4o-mini...');
-      const systemPrompt = `You are a data extraction expert. Extract reviews from HTML.
-      Return a JSON array of reviews with fields: author_name, rating (1-5), text, date (YYYY-MM-DD), platform ("${platform}").
-      Extract up to ${maxReviews} reviews. Return only valid JSON.`;
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: truncatedHtml }
-        ],
-        temperature: 0.1,
-        response_format: { type: 'json_object' }
-      });
-
-      const content = response.choices[0].message.content;
-      const parsedData = JSON.parse(content);
-      const reviews = parsedData.reviews || parsedData.data || parsedData;
-      
-      return validateReviews(reviews, platform, maxReviews);
-
-    } catch (error) {
-      console.error('[OpenAI] Extraction error:', error);
-      throw new Error(`AI extraction failed: ${error.message}`);
-    }
-  }
-
-  throw new Error('No valid API keys found! Please set GEMINI_API_KEY or OPENAI_API_KEY in .env file.');
+  throw new Error('No valid API keys found! Please set GEMINI_API_KEY in .env file.');
 }
 
 /**
