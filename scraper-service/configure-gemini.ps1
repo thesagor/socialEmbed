@@ -1,5 +1,4 @@
 $envFile = ".env"
-$geminiKey = "AIzaSyBonpZzhWiISZ8_qofcc8xxBBM6SvwDnuE"
 $apiSecret = "social-review-scraper-secret-2024-xyz789"
 
 Write-Host "========================================" -ForegroundColor Cyan
