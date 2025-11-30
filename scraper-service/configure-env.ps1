@@ -1,5 +1,4 @@
 $envFile = ".env"
-# $openaiKey = "sk-efghijklmnop5678efghijklmnop5678efghijkl"
 $apiSecret = "social-review-scraper-secret-2024-xyz789"
 
 $content = Get-Content $envFile
