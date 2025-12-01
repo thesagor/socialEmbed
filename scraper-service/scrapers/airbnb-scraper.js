@@ -10,7 +10,7 @@ async function scrape(listingUrl, maxReviews = 50) {
   try {
     console.log('[Airbnb] Launching browser...');
     browser = await puppeteer.launch({
-      headless: process.env.HEADLESS_MODE !== 'false',
+      headless: process.env.HEADLESS_MODE !== 'false' ? 'new' : false,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
